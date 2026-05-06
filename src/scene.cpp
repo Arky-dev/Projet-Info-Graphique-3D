@@ -71,10 +71,30 @@ float L = 5.0f;
 
 	cube2 = cube1;
 
+	// timer_snowflake.event_period is the time between two spawns for the snowflakes
+	timer_snowflake.event_period = 0.2f;
+
 	std::cout << "End function scene_structure::initialize()" << std::endl;
 }
 
+void scene_structure::display_snowflake()
+{
+	// Evaluate the positions and display the snowflakes
+	int const N = particle_system.snowflakes.size();
+	for (int k = 0; k < N; ++k)
+	{
+		// Current particle
+		particle_snow& particle = particle_system.snowflakes[k];
+		// Evaluate the current position of the particle
+		vec3 const p = particle.evaluate_position(timer_snowflake.t);
 
+		sphere.model.translation = p;
+		sphere.model.scaling = particle.radius;
+		sphere.material.color = particle.color;
+
+		draw(sphere, environment);
+	}
+}
 
 
 // This function is called permanently at every new frame
@@ -94,6 +114,7 @@ void scene_structure::display_frame()
 
 	// Update time
 	timer.update();
+	timer_snowflake.update();
 
 
 
@@ -112,6 +133,16 @@ void scene_structure::display_frame()
 		draw_wireframe(cube2, environment);
 	}
 
+	// Handling creation/remove of particles
+	if (timer_snowflake.event)
+		particle_system.snowflakes.push_back(particle_snow(timer_snowflake.t));
+
+	particle_system.remove_old_particles(timer_snowflake.t);
+
+
+	//if (gui.display_sphere) {
+	//	display_snowflake();
+	//}
 
 }
 

@@ -5,6 +5,8 @@
 
 #include "environment.hpp"
 
+#include "particles/particles.hpp"
+
 using cgp::mesh_drawable;
 
 
@@ -60,8 +62,16 @@ struct scene_structure : cgp::scene_inputs_generic {
 	// ****************************** //
 
 	mesh_drawable global_frame;          // The standard global frame
+	particle_system_structure particle_system;     // The container of the active particles
+	cgp::mesh_drawable sphere;     // Sphere used to represent the particle
+	cgp::mesh_drawable billboard;   // Quadrangle used to display the billboards
+
+	void display_snowflake();
+	void display_billboard();
 
 	timer_basic timer;
+	cgp::timer_event_periodic timer_snowflake;
+
 
 	mesh_drawable terrain;
 	//mesh_drawable water;

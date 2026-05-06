@@ -3,14 +3,14 @@
 #include "cgp/cgp.hpp"
 
 
-struct particle_bubble
+struct particle_snow
 {
 	cgp::vec3 p0;  // Initial position
 	float t0;      // Time of birth
 	cgp::vec3 color;
 	float radius;
 
-	particle_bubble(float creation_time = 0);               // Create a bubble at its initial position
+	particle_snow(float creation_time = 0);               // Create a snowflake at its initial position
 	cgp::vec3 evaluate_position(float absolute_time) const; // Evaluate its position at a given time
 };
 
@@ -27,7 +27,7 @@ struct particle_billboard
 // Storage of all the particles
 struct particle_system_structure
 {
-	std::vector<particle_bubble> bubbles;
+	std::vector<particle_snow> snowflakes;
 	std::vector<particle_billboard> billboards;
 
 	void remove_old_particles(float current_time);

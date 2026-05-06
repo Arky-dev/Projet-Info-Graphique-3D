@@ -1,23 +1,23 @@
 #include "particles.hpp"
 
 using namespace cgp;
-particle_bubble::particle_bubble(float creation_time)
+particle_snow::particle_snow(float creation_time)
 {
 	t0 = creation_time;
 	float const theta = rand_uniform(0.0f, 2 * Pi);
 	float const radius_position = std::sqrt(rand_uniform(0.0f, 0.7f*0.7f));
-	p0 = radius_position * vec3(std::cos(theta), 0.25f, std::sin(theta));
+	p0 = radius_position * vec3(std::cos(theta), 1.0f, std::sin(theta));
 	radius = std::sqrt(rand_uniform(0, 0.08f*0.08f));
 	color = { 0.5f + rand_uniform(0,0.2f),0.6f + rand_uniform(0,0.2f),1.0f - rand_uniform(0,0.2f) };
 }
 
-// Evaluate the position of the bubble at a given time
+// Evaluate the position of the snowflake at a given time
 //  absolute_time is the current time since the beginning of the program
-vec3 particle_bubble::evaluate_position(float absolute_time) const
+vec3 particle_snow::evaluate_position(float absolute_time) const
 {
 	float t = absolute_time - t0;
-	// TO DO: Modify the following line ...
-	return p0 + vec3(0.2f * std::cos(3 * t), t, 0.2f * std::sin(3*t));
+
+	return p0 + vec3(0.2f * std::cos(3 * t), -t, 0.2f * std::sin(3*t));
 }
 
 // Initialize the position of the billboard at the time of its creation
@@ -61,6 +61,6 @@ static void remove_old_element(std::vector<T>& container, float current_time, fl
 
 void particle_system_structure::remove_old_particles(float t)
 {
-	remove_old_element(bubbles, t, 3.0f);
+	remove_old_element(snowflakes, t, 3.0f);
 	remove_old_element(billboards, t, 3.0f);
 }
