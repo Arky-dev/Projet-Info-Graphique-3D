@@ -64,10 +64,11 @@ struct scene_structure : cgp::scene_inputs_generic {
 	timer_basic timer;
 
 	mesh_drawable terrain;
-	mesh_drawable water;
-	mesh_drawable tree;
+	//mesh_drawable water;
+	//mesh_drawable tree;
 	mesh_drawable cube1;
 	mesh_drawable cube2;
+	mesh_drawable cloud;
 
 
 	// ****************************** //

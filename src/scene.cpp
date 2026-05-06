@@ -61,21 +61,13 @@ float L = 5.0f;
 	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 100, 100);
 	deform_terrain(terrain_mesh);
 	terrain.initialize_data_on_gpu(terrain_mesh);
-	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sand.jpg");
+	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg");
 
-	float sea_w = 8.0;
-	float sea_z = -0.8f;
-	water.initialize_data_on_gpu(mesh_primitive_grid({ -sea_w,-sea_w,sea_z }, { sea_w,-sea_w,sea_z }, { sea_w,sea_w,sea_z }, { -sea_w,sea_w,sea_z }));
-	water.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/sea.png");
-
-	tree.initialize_data_on_gpu(mesh_load_file_obj(project::path + "assets/palm_tree/palm_tree.obj"));
-	tree.model.rotation = rotation_transform::from_axis_angle({ 1,0,0 }, Pi / 2.0f);
-	tree.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/palm_tree/palm_tree.jpg", GL_REPEAT, GL_REPEAT);
 
 	cube1.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, 0.5f));
 	cube1.model.rotation = rotation_transform::from_axis_angle({ -1,1,0 }, Pi / 7.0f);
 	cube1.model.translation = { 1.0f,1.0f,-0.1f };
-	cube1.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/wood.jpg");
+	cube1.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/smoke.png");
 
 	cube2 = cube1;
 
@@ -107,8 +99,6 @@ void scene_structure::display_frame()
 
 	// Draw all the shapes
 	draw(terrain, environment);
-	draw(water, environment);
-	draw(tree, environment);
 	draw(cube1, environment);
 
 	// Animate the second cube in the water
@@ -118,8 +108,6 @@ void scene_structure::display_frame()
 
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain, environment);
-		draw_wireframe(water, environment);
-		draw_wireframe(tree, environment);
 		draw_wireframe(cube1, environment);
 		draw_wireframe(cube2, environment);
 	}
