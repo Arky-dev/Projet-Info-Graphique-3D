@@ -1,23 +1,25 @@
 #include "particles.hpp"
 
 using namespace cgp;
-particle_snow::particle_snow(float creation_time)
+particle_snowflake::particle_snowflake(float creation_time)
 {
 	t0 = creation_time;
-	float const theta = rand_uniform(0.0f, 2 * Pi);
-	float const radius_position = std::sqrt(rand_uniform(0.0f, 0.7f*0.7f));
-	p0 = radius_position * vec3(std::cos(theta), 1.0f, std::sin(theta));
+	float L = 5.0f;
+	float const x = rand_uniform(-L, L);
+	float const y = rand_uniform(-L, L);
+	height = 3.0f;
+	p0 = vec3(x, y, height);
 	radius = std::sqrt(rand_uniform(0, 0.08f*0.08f));
-	color = { 0.5f + rand_uniform(0,0.2f),0.6f + rand_uniform(0,0.2f),1.0f - rand_uniform(0,0.2f) };
+	color = { 1.0f, 1.0f, 1.0f };
 }
 
 // Evaluate the position of the snowflake at a given time
 //  absolute_time is the current time since the beginning of the program
-vec3 particle_snow::evaluate_position(float absolute_time) const
+vec3 particle_snowflake::evaluate_position(float absolute_time) const
 {
 	float t = absolute_time - t0;
 
-	return p0 + vec3(0.2f * std::cos(3 * t), -t, 0.2f * std::sin(3*t));
+	return p0 + vec3(0.2f * std::cos(3 * t), 0.2f * std::sin(3*t), -t);
 }
 
 // Initialize the position of the billboard at the time of its creation

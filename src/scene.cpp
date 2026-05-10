@@ -54,10 +54,12 @@ void scene_structure::initialize()
 
 	// Initialize the shapes of the scene
 	// ***************************************** //
+	sphere.initialize_data_on_gpu(mesh_primitive_sphere(1.0f));
+	sphere.material.color = { 0.5f,0.8f,1.0f };
 
 	gui.display_frame = true;
 
-float L = 5.0f;
+	float L = 5.0f;
 	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 100, 100);
 	deform_terrain(terrain_mesh);
 	terrain.initialize_data_on_gpu(terrain_mesh);
@@ -84,7 +86,7 @@ void scene_structure::display_snowflake()
 	for (int k = 0; k < N; ++k)
 	{
 		// Current particle
-		particle_snow& particle = particle_system.snowflakes[k];
+		particle_snowflake& particle = particle_system.snowflakes[k];
 		// Evaluate the current position of the particle
 		vec3 const p = particle.evaluate_position(timer_snowflake.t);
 
@@ -135,14 +137,14 @@ void scene_structure::display_frame()
 
 	// Handling creation/remove of particles
 	if (timer_snowflake.event)
-		particle_system.snowflakes.push_back(particle_snow(timer_snowflake.t));
+		particle_system.snowflakes.push_back(particle_snowflake(timer_snowflake.t));
 
 	particle_system.remove_old_particles(timer_snowflake.t);
 
 
-	//if (gui.display_sphere) {
-	//	display_snowflake();
-	//}
+	if (gui.display_sphere) {
+		display_snowflake();
+	}
 
 }
 
@@ -151,6 +153,8 @@ void scene_structure::display_gui()
 {
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
+
+	ImGui::Checkbox("Display sphere", &gui.display_sphere);
 }
 
 

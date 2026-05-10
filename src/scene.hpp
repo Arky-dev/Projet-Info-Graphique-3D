@@ -14,6 +14,7 @@ using cgp::mesh_drawable;
 struct gui_parameters {
 	bool display_frame = false;
 	bool display_wireframe = false;
+	bool display_sphere = true;
 };
 
 
