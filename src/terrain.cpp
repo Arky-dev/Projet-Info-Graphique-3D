@@ -32,7 +32,7 @@ void update_terrain(mesh& terrain, mesh_drawable& terrain_visual, perlin_noise_p
 			float const noise = noise_perlin({ u, v }, parameters.octave, parameters.persistency, parameters.frequency_gain);
 
 			// use the noise as height value
-			terrain.position[idx].z = parameters.terrain_height * noise + t/10 * noisy_tab[idx];
+			terrain.position[idx].z = parameters.terrain_height * noise + t/50 * noisy_tab[idx];
 
 			// use also the noise as color value
 			//terrain.color[idx] = 0.3f * vec3(0, 0.5f, 0) + 0.7f * noise * vec3(1, 1, 1);
