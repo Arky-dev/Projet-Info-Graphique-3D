@@ -84,7 +84,7 @@ void scene_structure::initialize()
 	// Sphere used to display the position of a light
 	sphere_light.initialize_data_on_gpu(mesh_primitive_sphere(0.2f));
 
-	environment.light = { 3, 3, 3 };
+	environment.light = { 3, 3, 10 };
 
 	// Remove warnings for unset uniforms
 	cgp_warning::max_warning = 1;
@@ -134,7 +134,7 @@ void scene_structure::display_frame()
 	environment.camera_projection = camera_projection.matrix();
 	environment.camera_view = camera_control.camera_model.matrix_view();
 
-	environment.light = { 3,3,3 };
+	environment.light = { 3,3,10 };
 	sphere_light.model.translation = environment.light;
 	sphere_light.material.color = gui.light_color * 0.8f;
 	sphere_light.material.phong.ambient = 1;
