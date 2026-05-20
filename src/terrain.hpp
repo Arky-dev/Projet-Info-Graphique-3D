@@ -4,10 +4,10 @@
 
 struct perlin_noise_parameters
 {
-	float persistency = 0.35f;
-	float frequency_gain = 2.0f;
-	int octave = 6;
-	float terrain_height = 0.5f;
+	float persistency = 0.45f;     // Rendu plus rocheux/escarpé
+	float frequency_gain = 2.0f;   // On ne change pas (standard)
+	int octave = 6;                // Un peu plus de micro-détails
+	float terrain_height = 4.5f;   // Des vraies montagnes sur les bords
 };
 
 
