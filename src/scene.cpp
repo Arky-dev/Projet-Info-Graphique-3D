@@ -100,12 +100,17 @@ void scene_structure::initialize()
 	snowflake.material.color = { 1.0f, 1.0f,1.0f };
 
 	// Number of snowflakes displayed using Instancing (value can be higher)
-	N_instances = 1000;
+	N_instances = 10000;
 	// Add a per-instance vertex attribute for the position
 	for (int i = 0; i < N_instances; ++i)
-		particle_system.snowflakes.push_back(particle_snowflake(timer_snowflake.t));
-	particle_system.evaluate_all_positions(timer.t);
-	// Send these positions and sizes as a new buffer of data to the shader
+	{
+		particle_snowflake p = particle_snowflake();
+		particle_system.snowflakes.push_back(p);
+		particle_system.snowflake_positions_and_sizes.push_back(vec4(p.p0, p.size));
+	}
+	// Wind
+	wind = { 5.0f, 0.0f, 0.0f };
+	// Send initial positions and sizes as a new buffer of data to the shader
 	snowflake.initialize_supplementary_data_on_gpu(particle_system.snowflake_positions_and_sizes, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 	// timer_snowflake.event_period is the time between two spawns for the snowflakes
 	timer_snowflake.event_period = 0.2f;
@@ -115,13 +120,7 @@ void scene_structure::initialize()
 
 void scene_structure::display_snowflake()
 {
-	// Evaluate the positions and display the snowflakes
-	particle_system.evaluate_all_positions(timer.t);
-	int N = particle_system.snowflake_positions_and_sizes.size();
-
-	// Send these positions as a new buffer of data to the shader
-	snowflake.update_supplementary_data_on_gpu(particle_system.snowflake_positions_and_sizes, /*location*/ 4, /*size elements update*/ N);
-	draw(snowflake, environment, N);
+	draw(snowflake, environment, N_instances);
 }
 
 
@@ -151,6 +150,7 @@ void scene_structure::display_frame()
 	timer_snowflake.update();
 
 	environment.uniform_generic.uniform_float["time"] = timer.t;
+	environment.uniform_generic.uniform_vec3["wind"] = wind;
 
 	auto const& camera = camera_control.camera_model;
 
@@ -166,7 +166,7 @@ void scene_structure::display_frame()
 	draw(terrain_drawable, environment);
 	draw(cube1, environment);
 	// Draw the instances of snowflakes
-	display_snowflake();
+	draw(snowflake, environment, N_instances);
 
 	//if (gui.display_wireframe) {
 	//	draw_wireframe(terrain, environment);

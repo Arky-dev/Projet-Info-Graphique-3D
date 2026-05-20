@@ -83,6 +83,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	cgp::mesh_drawable terrain_drawable;
 	std::vector<float> noisy_tab;
 	perlin_noise_parameters parameters;
+	cgp::vec3 wind;
 	//mesh_drawable water;
 	//mesh_drawable tree;
 	mesh_drawable cube1;

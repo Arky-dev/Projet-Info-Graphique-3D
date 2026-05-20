@@ -7,7 +7,7 @@ layout (location = 0) in vec3 vertex_position; // vertex position in local space
 layout (location = 1) in vec3 vertex_normal;   // vertex normal in local space   (nx,ny,nz)
 layout (location = 2) in vec3 vertex_color;    // vertex color      (r,g,b)
 layout (location = 3) in vec2 vertex_uv;       // vertex uv-texture (u,v)
-layout (location = 4) in vec4 instance_position_and_size;  // instance position and size (x,y,z,s)
+layout (location = 4) in vec4 instance_position_and_size;  // instance position (x,y,z) and size (s)
 
 // Output variables sent to the fragment shader
 out struct fragment_data
@@ -25,16 +25,23 @@ uniform mat4 projection; // Projection (perspective or orthogonal) matrix of the
 
 uniform float time; // Time in seconds since the start of the program
 uniform mat3 R; // Rotation matrix such that snowflakes always face the camera
-
+uniform vec3 wind; // Wind vector (x,y,z) applied to the snowflakes
 
 
 void main()
 {
 
 	// The position of the vertex in the world space - Add the offset related to the current instance
-	vec3 instance_position = instance_position_and_size.xyz;
 	float size = instance_position_and_size.w;
-	vec4 position = model * vec4(R * vertex_position * size + instance_position, 1.0);
+	vec3 instance_position = instance_position_and_size.xyz;
+	vec3 displacement = instance_position + size * vec3(0.0f, 0.0f, -1.0f) * time + wind * time;
+	displacement.x = mod(displacement.x, 5.0f);
+	displacement.y = mod(displacement.y, 5.0f);
+	displacement.z = mod(displacement.z, 5.0f);
+	vec3 p = R * vertex_position * size + displacement;
+	
+	vec4 position = model * vec4(p, 1.0f);
+	
 	// position = position + vec4(0.0, 0.0, - 0.5 * time, 0.0); // Add a vertical oscillation to the position of the vertex (to make the snowflake move up and down)
 
 	// The normal of the vertex in the world space
