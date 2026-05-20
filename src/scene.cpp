@@ -34,8 +34,8 @@ void scene_structure::initialize()
 	camera_control.set_rotation_axis_z(); // camera rotates around z-axis
 	//   look_at(camera_position, targeted_point, up_direction)
 	camera_control.look_at(
-		{ 5.0f, -4.0f, 3.5f } /* position of the camera in the 3D scene */,
-		{0,0,0} /* targeted point in 3D scene */,
+		{ 3.0f, -2.0f, 5.5f } /* position of the camera in the 3D scene */,
+		{0,0,3} /* targeted point in 3D scene */,
 		{0,0,1} /* direction of the "up" vector */);
 
 	camera_projection = camera_projection_perspective{
@@ -56,12 +56,6 @@ void scene_structure::initialize()
 	// ***************************************** //
 
 	gui.display_frame = true;
-
-	/*float L = 5.0f;
-	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 100, 100);
-	deform_terrain(terrain_mesh);
-	terrain.initialize_data_on_gpu(terrain_mesh);
-	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg");*/
 
 	int N = 180;
 
@@ -104,16 +98,14 @@ void scene_structure::initialize()
 	// Add a per-instance vertex attribute for the position
 	for (int i = 0; i < N_instances; ++i)
 	{
-		particle_snowflake p = particle_snowflake();
+		particle_snowflake p = particle_snowflake(10.0f);
 		particle_system.snowflakes.push_back(p);
 		particle_system.snowflake_positions_and_sizes.push_back(vec4(p.p0, p.size));
 	}
 	// Wind
-	wind = { 5.0f, 0.0f, 0.0f };
+	wind = { 0.0f, 0.0f, 0.0f };
 	// Send initial positions and sizes as a new buffer of data to the shader
 	snowflake.initialize_supplementary_data_on_gpu(particle_system.snowflake_positions_and_sizes, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
-	// timer_snowflake.event_period is the time between two spawns for the snowflakes
-	timer_snowflake.event_period = 0.2f;
 
 	std::cout << "End function scene_structure::initialize()" << std::endl;
 }
@@ -145,11 +137,11 @@ void scene_structure::display_frame()
 	if (gui.display_frame)
 		draw(global_frame, environment);
 
-	// Timers
+	// Timer
 	timer.update();
-	timer_snowflake.update();
-
 	environment.uniform_generic.uniform_float["time"] = timer.t;
+
+	// Wind
 	environment.uniform_generic.uniform_vec3["wind"] = wind;
 
 	auto const& camera = camera_control.camera_model;
@@ -164,27 +156,15 @@ void scene_structure::display_frame()
 
 	// Draw all the shapes
 	draw(terrain_drawable, environment);
-	draw(cube1, environment);
 	// Draw the instances of snowflakes
 	draw(snowflake, environment, N_instances);
 
-
-	// Handling creation/remove of particles
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain_drawable, environment);
 	}
 
-	// Handling creation/remove of particles
-	//if (timer_snowflake.event)
-	//	particle_system.snowflakes.push_back(particle_snowflake(timer_snowflake.t));
-
 	
-	temp_terrain_update(terrain_mesh, terrain_drawable, parameters, noisy_tab, timer_snowflake.t);
-
-
-	////if (gui.display_sphere) {
-	////	display_snowflake();
-	////}*/*/
+	temp_terrain_update(terrain_mesh, terrain_drawable, parameters, noisy_tab, timer.t);
 
 }
 
@@ -193,8 +173,9 @@ void scene_structure::display_gui()
 {
 	ImGui::Checkbox("Frame", &gui.display_frame);
 	ImGui::Checkbox("Wireframe", &gui.display_wireframe);
-
-	ImGui::Checkbox("Display sphere", &gui.display_sphere);
+	// Wind
+	ImGui::SliderFloat("Wind x", &wind.x, -1.0f, 1.0f);
+	ImGui::SliderFloat("Wind y", &wind.y, -1.0f, 1.0f);
 }
 
 

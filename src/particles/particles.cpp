@@ -3,11 +3,10 @@
 
 using namespace cgp;
 
-particle_snowflake::particle_snowflake()
+particle_snowflake::particle_snowflake(float L)
 {
 
 	float max_height = 5.0f;
-	float L = 5.0f;
 	float const x = rand_uniform(-L, L);
 	float const y = rand_uniform(-L, L);
 	float const z = rand_uniform(0, max_height);

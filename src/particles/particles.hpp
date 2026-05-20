@@ -7,7 +7,7 @@ struct particle_snowflake
 	cgp::vec3 p0;  // Initial position
 	float size;
 
-	particle_snowflake();               // Create a snowflake at its initial position
+	particle_snowflake(float L);               // Create a snowflake at its initial position
 };
 
 

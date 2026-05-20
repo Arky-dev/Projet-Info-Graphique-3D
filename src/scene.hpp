@@ -16,7 +16,6 @@ using cgp::mesh_drawable;
 struct gui_parameters {
 	bool display_frame = false;
 	bool display_wireframe = false;
-	bool display_sphere = true;
 
 	vec3 light_color = { 1,1,1 };
 };
@@ -76,7 +75,6 @@ struct scene_structure : cgp::scene_inputs_generic {
 	void display_billboard();
 
 	timer_basic timer;
-	cgp::timer_event_periodic timer_snowflake;
 
 
 	cgp::mesh terrain_mesh;
@@ -84,10 +82,6 @@ struct scene_structure : cgp::scene_inputs_generic {
 	std::vector<float> noisy_tab;
 	perlin_noise_parameters parameters;
 	cgp::vec3 wind;
-	//mesh_drawable water;
-	//mesh_drawable tree;
-	mesh_drawable cube1;
-	mesh_drawable cube2;
 	mesh_drawable cloud;
 	int N_instances;
 
