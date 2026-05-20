@@ -17,6 +17,8 @@ struct gui_parameters {
 	bool display_frame = false;
 	bool display_wireframe = false;
 	bool display_sphere = true;
+
+	vec3 light_color = { 1,1,1 };
 };
 
 
@@ -66,8 +68,9 @@ struct scene_structure : cgp::scene_inputs_generic {
 
 	mesh_drawable global_frame;          // The standard global frame
 	particle_system_structure particle_system;     // The container of the active particles
-	cgp::mesh_drawable sphere;     // Sphere used to represent the particle
+	cgp::mesh_drawable snowflake;     // Mesh used to represent the snowflakes
 	cgp::mesh_drawable billboard;   // Quadrangle used to display the billboards
+	cgp::mesh_drawable sphere_light; // The moon
 
 	void display_snowflake();
 	void display_billboard();
@@ -85,7 +88,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable cube1;
 	mesh_drawable cube2;
 	mesh_drawable cloud;
-
+	int N_instances;
 
 	// ****************************** //
 	// Callback functions
