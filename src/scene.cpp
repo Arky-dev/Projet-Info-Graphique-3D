@@ -59,11 +59,29 @@ void scene_structure::initialize()
 
 	gui.display_frame = true;
 
-	float L = 5.0f;
+	/*float L = 5.0f;
 	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 100, 100);
 	deform_terrain(terrain_mesh);
 	terrain.initialize_data_on_gpu(terrain_mesh);
-	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg");
+	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg");*/
+
+	int N = 180;
+
+	for (int ku = 0; ku < N; ++ku) {
+		for (int kv = 0; kv < N; ++kv) {
+			const float u = ku / (N - 1.0f);
+			const float v = kv / (N - 1.0f);
+			float const noise = noise_perlin({ u, v }, 4, 0.25, 1.5);
+			noisy_tab.insert(noisy_tab.end(), noise);
+		}
+	}
+
+	terrain_mesh = create_terrain_mesh();
+	terrain_drawable.initialize_data_on_gpu(terrain_mesh);
+	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg",
+		GL_REPEAT,
+		GL_REPEAT);
+	update_terrain(terrain_mesh, terrain_drawable, parameters, noisy_tab, 0.0);
 
 
 	cube1.initialize_data_on_gpu(mesh_primitive_cube({ 0,0,0 }, 0.5f));
@@ -121,7 +139,7 @@ void scene_structure::display_frame()
 
 
 	// Draw all the shapes
-	draw(terrain, environment);
+	draw(terrain_drawable, environment);
 	draw(cube1, environment);
 
 	// Animate the second cube in the water
@@ -130,7 +148,7 @@ void scene_structure::display_frame()
 	draw(cube2, environment);
 
 	if (gui.display_wireframe) {
-		draw_wireframe(terrain, environment);
+		draw_wireframe(terrain_drawable, environment);
 		draw_wireframe(cube1, environment);
 		draw_wireframe(cube2, environment);
 	}
@@ -140,6 +158,7 @@ void scene_structure::display_frame()
 		particle_system.snowflakes.push_back(particle_snowflake(timer_snowflake.t));
 
 	particle_system.remove_old_particles(timer_snowflake.t);
+	temp_terrain_update(terrain_mesh, terrain_drawable, parameters, noisy_tab, timer_snowflake.t);
 
 
 	if (gui.display_sphere) {

@@ -7,6 +7,8 @@
 
 #include "particles/particles.hpp"
 
+#include "terrain.hpp"
+
 using cgp::mesh_drawable;
 
 
@@ -74,7 +76,10 @@ struct scene_structure : cgp::scene_inputs_generic {
 	cgp::timer_event_periodic timer_snowflake;
 
 
-	mesh_drawable terrain;
+	cgp::mesh terrain_mesh;
+	cgp::mesh_drawable terrain_drawable;
+	std::vector<float> noisy_tab;
+	perlin_noise_parameters parameters;
 	//mesh_drawable water;
 	//mesh_drawable tree;
 	mesh_drawable cube1;
