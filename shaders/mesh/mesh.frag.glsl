@@ -121,7 +121,7 @@ void main()
 	// Compute the final shaded color using Phong model
 	float Ka = material.phong.ambient;
 	float Kd = material.phong.diffuse;
-	float Ks = material.phong.specular;
+	float Ks = 0;
 	vec3 color_shading = (Ka + Kd * diffuse_component) * color_object + Ks * specular_component * vec3(1.0, 1.0, 1.0);
 	
 	// Output color, with the alpha component

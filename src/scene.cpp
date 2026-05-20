@@ -57,11 +57,29 @@ void scene_structure::initialize()
 
 	gui.display_frame = true;
 
-	float L = 5.0f;
+	/*float L = 5.0f;
 	mesh terrain_mesh = mesh_primitive_grid({ -L,-L,0 }, { L,-L,0 }, { L,L,0 }, { -L,L,0 }, 100, 100);
 	deform_terrain(terrain_mesh);
 	terrain.initialize_data_on_gpu(terrain_mesh);
-	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg");
+	terrain.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg");*/
+
+	int N = 180;
+
+	for (int ku = 0; ku < N; ++ku) {
+		for (int kv = 0; kv < N; ++kv) {
+			const float u = ku / (N - 1.0f);
+			const float v = kv / (N - 1.0f);
+			float const noise = noise_perlin({ u, v }, 4, 0.25, 1.5);
+			noisy_tab.insert(noisy_tab.end(), noise);
+		}
+	}
+
+	terrain_mesh = create_terrain_mesh();
+	terrain_drawable.initialize_data_on_gpu(terrain_mesh);
+	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg",
+		GL_REPEAT,
+		GL_REPEAT);
+	update_terrain(terrain_mesh, terrain_drawable, parameters, noisy_tab, 0.0);
 
 	// Sphere used to display the position of a light
 	sphere_light.initialize_data_on_gpu(mesh_primitive_sphere(0.2f));
@@ -145,7 +163,8 @@ void scene_structure::display_frame()
 	environment.uniform_generic.uniform_mat3["R"] = R;
 
 	// Draw all the shapes
-	draw(terrain, environment);
+	draw(terrain_drawable, environment);
+	draw(cube1, environment);
 	// Draw the instances of snowflakes
 	display_snowflake();
 
@@ -156,13 +175,15 @@ void scene_structure::display_frame()
 	// Handling creation/remove of particles
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain, environment);
+		draw_wireframe(terrain_drawable, environment);
 	}
 
 	// Handling creation/remove of particles
 	//if (timer_snowflake.event)
 	//	particle_system.snowflakes.push_back(particle_snowflake(timer_snowflake.t));
 
-	// particle_system.remove_old_particles(timer_snowflake.t);
+	
+	temp_terrain_update(terrain_mesh, terrain_drawable, parameters, noisy_tab, timer_snowflake.t);
 
 
 	////if (gui.display_sphere) {
