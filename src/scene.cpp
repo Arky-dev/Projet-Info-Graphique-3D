@@ -168,13 +168,13 @@ void scene_structure::display_frame()
 	// Draw the instances of snowflakes
 	display_snowflake();
 
-	if (gui.display_wireframe) {
-		draw_wireframe(terrain, environment);
-	}
+	//if (gui.display_wireframe) {
+	//	draw_wireframe(terrain, environment);
+	//}
 
 	// Handling creation/remove of particles
 	if (gui.display_wireframe) {
-		draw_wireframe(terrain, environment);
+		//draw_wireframe(terrain, environment);
 		draw_wireframe(terrain_drawable, environment);
 	}
 
