@@ -76,10 +76,17 @@ void scene_structure::initialize()
 
 	terrain_mesh = create_terrain_mesh();
 	terrain_drawable.initialize_data_on_gpu(terrain_mesh);
-	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg",
+	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/pierre.jpg",
 		GL_REPEAT,
 		GL_REPEAT);
 	update_terrain(terrain_mesh, terrain_drawable, parameters, noisy_tab, 0.0);
+
+	snow_mesh = create_terrain_mesh();
+	snow_drawable.initialize_data_on_gpu(snow_mesh);
+	snow_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg",
+		GL_REPEAT,
+		GL_REPEAT);
+	update_terrain(snow_mesh, snow_drawable, parameters, noisy_tab, 0.0);
 
 	// Sphere used to display the position of a light
 	sphere_light.initialize_data_on_gpu(mesh_primitive_sphere(0.2f));
@@ -179,7 +186,8 @@ void scene_structure::display_frame()
 	//	particle_system.snowflakes.push_back(particle_snowflake(timer_snowflake.t));
 
 	
-	temp_terrain_update(terrain_mesh, terrain_drawable, parameters, noisy_tab, timer_snowflake.t);
+	temp_terrain_update(terrain_mesh, snow_mesh, snow_drawable, parameters, timer_snowflake.t);
+	draw(snow_drawable, environment);
 
 
 	////if (gui.display_sphere) {
