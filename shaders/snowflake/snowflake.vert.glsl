@@ -34,10 +34,10 @@ void main()
 	// The position of the vertex in the world space - Add the offset related to the current instance
 	float size = instance_position_and_size.w;
 	vec3 instance_position = instance_position_and_size.xyz;
-	vec3 displacement = instance_position + size * vec3(0.0f, 0.0f, -1.0f) * time + wind * time;
+	vec3 displacement = instance_position + size * vec3(0.0f, 0.0f, -0.5f) * time + wind * time;
 	displacement.x = -10.0f + mod(displacement.x + 10.0f, 20.0f);
 	displacement.y = -10.0f + mod(displacement.y + 10.0f, 20.0f);
-	displacement.z = mod(displacement.z, 5.0f);
+	displacement.z = mod(displacement.z, 10.0f);
 	vec3 p = R * vertex_position * size + displacement;
 	
 	vec4 position = model * vec4(p, 1.0f);
