@@ -3,21 +3,8 @@
 
 using namespace cgp;
 
-void deform_terrain(mesh& m)
-{
-	// Set the terrain to have a gaussian shape
-	for (int k = 0; k < m.position.size(); ++k)
-	{
-		vec3& p = m.position[k];
-		float d2 = p.x*p.x + p.y * p.y;
-		float z = exp(-d2 / 4)-1;
-
-		z = z + 0.05f*noise_perlin({ p.x,p.y });
-
-		p = { p.x, p.y, z };
-	}
-
-	m.normal_update();
+float rand_interval(float min, float max) {
+	return min + (max - min) * (std::rand() / (float)RAND_MAX);
 }
 
 
@@ -93,12 +80,74 @@ void scene_structure::initialize()
 		}
 	}
 
+	// Initialize ONE terrain mesh
 	terrain_mesh = create_terrain_mesh();
 	terrain_drawable.initialize_data_on_gpu(terrain_mesh);
-	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snow.jpg",
-		GL_REPEAT,
-		GL_REPEAT);
+
+	// Load Rock texture (handled automatically by terrain_drawable)
+	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(
+		project::path + "assets/pierre.jpg", GL_REPEAT, GL_REPEAT);
+
+	// Load Snow texture directly into OpenGL (we will pass this manually)
+	snow_texture_id = opengl_load_texture_image(
+		project::path + "assets/snow.jpg", GL_REPEAT, GL_REPEAT);
+
+	// Apply the initial shape deformation
 	update_terrain(terrain_mesh, terrain_drawable, parameters, noisy_tab, 0.0);
+
+	// Load our new custom shader that handles the snow mathematically
+	// (Assuming you have a basic standard vertex shader, you just replace the fragment shader)
+	terrain_drawable.shader.load(
+		project::path + "shaders/terrain/terrain.vert.glsl", // Or standard CGP terrain vert
+		project::path + "shaders/terrain/terrain.frag.glsl"
+	);
+
+	// 1. Create the basic shapes (Trunk and Branches)
+	mesh tree_mesh = mesh_load_file_obj(project::path + "assets/tree/raw2.obj");
+
+	for (auto& p : tree_mesh.position) {
+		p *= 1.5f; 
+	}
+	tree_mesh.normal_update();
+
+	// 3. Send to GPU and set textures/shaders
+	tree_drawable.initialize_data_on_gpu(tree_mesh);
+	
+	// Assuming you want the whole tree to use the bark texture for now
+	tree_drawable.texture.load_and_initialize_texture_2d_on_gpu(
+		project::path + "assets/bark.jpg", GL_REPEAT, GL_REPEAT);
+
+	tree_drawable.shader.load(
+		project::path + "shaders/tree/tree.vert.glsl", 
+		project::path + "shaders/tree/tree.frag.glsl"
+	);
+
+	// 4. Position the tree in the middle of your scene
+	// You can change X and Y to move it around your terrain
+	tree_drawable.model.translation = { 9.f, 0.0f, 1.6f };
+	tree_drawable.model.rotation = rotation_transform::from_axis_angle({ 0, 1, 0 }, -1.f* Pi / 2.0f);
+
+
+	// 1. INCREASE SIZE: Change from 0.05f to 0.15f for better visibility
+	float sl = 0.05f;
+	cgp::mesh quad_burst = cgp::mesh_primitive_quadrangle({ -sl, -sl, 0 }, { sl, -sl, 0 }, { sl, sl, 0 }, { -sl, sl, 0 });
+
+	tree_snow_burst.initialize_data_on_gpu(quad_burst);
+	tree_snow_burst.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snowflakes/1.png");
+	tree_snow_burst.shader.load(project::path + "shaders/burst/burst.vert.glsl", project::path + "shaders/burst/burst.frag.glsl");
+
+	// 2. SETUP INSTANCING: Create a buffer for up to 1000 particles
+	glGenBuffers(1, &burst_instance_vbo);
+	glBindVertexArray(tree_snow_burst.vao);
+	glBindBuffer(GL_ARRAY_BUFFER, burst_instance_vbo);
+	glBufferData(GL_ARRAY_BUFFER, 5000 * sizeof(cgp::vec4), nullptr, GL_DYNAMIC_DRAW);
+
+	// Bind it to Location 4 in the shader
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(cgp::vec4), (void*)0);
+	glVertexAttribDivisor(4, 1); // The magic line that tells OpenGL it is instanced!
+	glBindVertexArray(0);
+
 
 	// Sphere used to display the position of a light
 	sphere_light.initialize_data_on_gpu(mesh_primitive_sphere(0.2f));
@@ -200,12 +249,136 @@ void scene_structure::display_frame()
 	// Draw the instances of snowflakes
 	draw(snowflake, environment, N_instances);
 
+	
+
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, snow_texture_id);
+
+	// 2. Tell the shader that "image_snow" corresponds to Texture Unit 1
+	environment.uniform_generic.uniform_int["image_snow"] = 1;
+
+	// 3. Draw the terrain (the shader calculates the snow on the fly!)
+	draw(terrain_drawable, environment);
+
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain_drawable, environment);
 	}
 
-	
-	temp_terrain_update(terrain_mesh, terrain_drawable, parameters, noisy_tab, timer.t);
+
+	static float last_time = 0.0f;
+	float dt = timer.t - last_time;
+	last_time = timer.t;
+
+	// State machine for snow and shaking
+	static float tree_snow_timer = 0.0f;
+	static float shake_timer = 0.0f;
+	static bool is_shaking = false;
+
+	float current_intensity = 0.0f;
+
+	if (!is_shaking) {
+		tree_snow_timer += dt;
+		if (tree_snow_timer >= 10.0f) {
+			is_shaking = true;
+			shake_timer = 0.0f;
+
+			// --- ADD THIS: SPAWN THE BURST! ---
+			// --- SPAWN THE BURST! ---
+			tree_particles.clear();
+
+			// 1. INCREASE COUNT: Change this to 1500 or 2000 for a massive blizzard!
+			for (int i = 0; i < 1500; ++i) {
+				burst_particle p;
+
+				// 1. Generate a random angle (0 to 2*Pi radians)
+				float angle = rand_interval(0.0f, 6.283185f);
+
+				// 2. Generate a random radius (0 to 3.0)
+				// We use std::sqrt to ensure an even, uniform spread across the circle!
+				float radius = 3.0f * std::sqrt(rand_interval(0.0f, 1.0f));
+
+				// 3. Convert polar coordinates to Cartesian (X, Y)
+				float rx = radius * std::cos(angle);
+				float ry = radius * std::sin(angle);
+
+				// Z remains a vertical spread (height of the canopy)
+				float rz = rand_interval(-1.0f, 1.0f);
+
+				p.position = { 0.0f + rx, 0.0f + ry, 1.6f + rz };
+
+				// Gentle horizontal drift, tiny Z-axis spread
+				p.velocity = { rx * 0.5f, ry * 0.5f, rand_interval(-0.2f, 0.2f) };
+				p.age = rand_interval(1.0f, 2.5f);
+
+				tree_particles.push_back(p);
+
+			}
+		}
+	}
+	else {
+		shake_timer += dt;
+
+		// Melt the snow visually while shaking
+		tree_snow_timer = std::max(0.0f, tree_snow_timer - (dt * 10.0f));
+
+		// ALLOW 3 SECONDS FOR THE CALM DOWN TO FINISH
+		if (shake_timer >= 3.0f) {
+			is_shaking = false;
+			tree_snow_timer = 0.0f;
+			shake_timer = 0.0f; // Reset timer when done
+		}
+	}
+
+	// Prepare the shader
+	glUseProgram(tree_drawable.shader.id);
+
+	// Pass the exact shake_timer to the shader instead of an intensity toggle!
+	environment.uniform_generic.uniform_float["shake_time"] = shake_timer;
+	environment.uniform_generic.uniform_float["snow_time"] = tree_snow_timer;
+
+	environment.uniform_generic.uniform_vec2["tree_pivot"] = tree_pivot;
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, snow_texture_id);
+	environment.uniform_generic.uniform_int["image_snow"] = 1;
+
+	// Draw the tree
+	draw(tree_drawable, environment);
+
+	// --- NEW PHYSICS & INSTANCED RENDERING LOOP ---
+	std::vector<cgp::vec4> burst_instance_data;
+
+	for (auto it = tree_particles.begin(); it != tree_particles.end(); ) {
+		// Kinematics
+		it->velocity.z -= 4.0f * dt;
+		it->position += it->velocity * dt;
+		it->age -= dt;
+
+		// Kill particles that hit the floor or get too old
+		if (it->age <= 0.0f || it->position.z <= 0.0f) {
+			it = tree_particles.erase(it);
+		}
+		else {
+			// Shrink the snowflake as it hits its last 0.5 seconds of life
+			float current_scale = (it->age < 0.5f) ? (it->age * 2.0f) : 1.0f;
+
+			// Pack the X, Y, Z, and Scale into a vec4 and add it to our list
+			burst_instance_data.push_back({ it->position.x, it->position.y, it->position.z, current_scale });
+			++it;
+		}
+	}
+
+	// If we have particles alive, send them to the GPU and draw them!
+	if (!burst_instance_data.empty()) {
+		glBindBuffer(GL_ARRAY_BUFFER, burst_instance_vbo);
+
+		// 1. Upload the array to the GPU
+		glBufferSubData(GL_ARRAY_BUFFER, 0, burst_instance_data.size() * sizeof(cgp::vec4), burst_instance_data.data());
+
+		// 2. Draw ALL particles at once using the instance count!
+		draw(tree_snow_burst, environment, burst_instance_data.size());
+	}
 
 }
 
@@ -217,6 +390,9 @@ void scene_structure::display_gui()
 	// Wind
 	ImGui::SliderFloat("Wind x", &wind.x, -1.0f, 1.0f);
 	ImGui::SliderFloat("Wind y", &wind.y, -1.0f, 1.0f);
+
+	// ADD THIS SLIDER:
+	ImGui::SliderFloat2("Tree Pivot (Y, Z)", &tree_pivot.x, -10.0f, 10.0f);
 }
 
 

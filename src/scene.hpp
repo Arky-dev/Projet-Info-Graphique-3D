@@ -87,12 +87,40 @@ struct scene_structure : cgp::scene_inputs_generic {
 
 
 	cgp::mesh terrain_mesh;
+	cgp::mesh snow_mesh;
 	cgp::mesh_drawable terrain_drawable;
+	cgp::mesh_drawable snow_drawable;
 	std::vector<float> noisy_tab;
 	perlin_noise_parameters parameters;
 	cgp::vec3 wind;
 	mesh_drawable cloud;
 	int N_instances;
+	GLuint snow_texture_id;
+	cgp::mesh_drawable tree_drawable;
+	cgp::vec2 tree_pivot = { 0.0f, 9.0f };
+
+	// 1. The physics structure for the falling snow
+	struct burst_particle {
+		cgp::vec3 position;
+		cgp::vec3 velocity;
+		float age;
+	};
+
+	std::vector<burst_particle> tree_particles;
+	cgp::mesh_drawable tree_snow_burst;
+
+	// ADD THIS: The buffer that will hold our instancing data
+	GLuint burst_instance_vbo = 0;
+
+	float tree_snow_timer = 0.0f;
+
+	// 2. State Machine Variables
+	enum TreeState { IDLE, SHAKING };
+	TreeState current_tree_state = IDLE;
+
+	float tree_shake_timer = 0.0f;      // Tracks how long the tree has been shaking
+	float const SNOW_MAX_TIME = 15.0f;  // Shakes after 15 seconds of snow
+	float const SHAKE_DURATION = 2.0f;  // Shakes for 2 seconds
 
 	// ****************************** //
 	// Callback functions
