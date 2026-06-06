@@ -16,7 +16,6 @@ using cgp::mesh_drawable;
 struct gui_parameters {
 	bool display_frame = false;
 	bool display_wireframe = false;
-	bool display_sphere = true;
 
 	vec3 light_color = { 1,1,1 };
 };
@@ -76,7 +75,6 @@ struct scene_structure : cgp::scene_inputs_generic {
 	void display_billboard();
 
 	timer_basic timer;
-	cgp::timer_event_periodic timer_snowflake;
 
 
 	cgp::mesh terrain_mesh;
@@ -85,12 +83,35 @@ struct scene_structure : cgp::scene_inputs_generic {
 	cgp::mesh_drawable snow_drawable;
 	std::vector<float> noisy_tab;
 	perlin_noise_parameters parameters;
-	//mesh_drawable water;
-	//mesh_drawable tree;
-	mesh_drawable cube1;
-	mesh_drawable cube2;
+	cgp::vec3 wind;
 	mesh_drawable cloud;
 	int N_instances;
+	GLuint snow_texture_id;
+	cgp::mesh_drawable tree_drawable;
+	cgp::vec2 tree_pivot = { 0.0f, 9.0f };
+
+	// 1. The physics structure for the falling snow
+	struct burst_particle {
+		cgp::vec3 position;
+		cgp::vec3 velocity;
+		float age;
+	};
+
+	std::vector<burst_particle> tree_particles;
+	cgp::mesh_drawable tree_snow_burst;
+
+	// ADD THIS: The buffer that will hold our instancing data
+	GLuint burst_instance_vbo = 0;
+
+	float tree_snow_timer = 0.0f;
+
+	// 2. State Machine Variables
+	enum TreeState { IDLE, SHAKING };
+	TreeState current_tree_state = IDLE;
+
+	float tree_shake_timer = 0.0f;      // Tracks how long the tree has been shaking
+	float const SNOW_MAX_TIME = 15.0f;  // Shakes after 15 seconds of snow
+	float const SHAKE_DURATION = 2.0f;  // Shakes for 2 seconds
 
 	// ****************************** //
 	// Callback functions

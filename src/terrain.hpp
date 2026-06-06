@@ -17,4 +17,3 @@ cgp::mesh create_terrain_mesh();
 // Recompute the vertices of the terrain everytime a parameter is modified
 //  and update the mesh_drawable accordingly
 void update_terrain(cgp::mesh& terrain, cgp::mesh_drawable& terrain_visual, perlin_noise_parameters const& parameters, std::vector<float> noisy_tab, float t);
-void temp_terrain_update(cgp::mesh const& terrain_base, cgp::mesh& snow_mesh, cgp::mesh_drawable& snow_visual, perlin_noise_parameters const& parameters, float t);
