@@ -249,8 +249,6 @@ void scene_structure::display_frame()
 	// Draw the instances of snowflakes
 	draw(snowflake, environment, N_instances);
 
-	
-
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, snow_texture_id);
