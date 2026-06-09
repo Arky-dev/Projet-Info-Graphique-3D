@@ -37,7 +37,7 @@ void main()
 	vec3 displacement = instance_position + size * vec3(0.0f, 0.0f, -1.0f) * time + wind * time;
 	displacement.x = -10.0f + mod(displacement.x + 10.0f, 20.0f);
 	displacement.y = -10.0f + mod(displacement.y + 10.0f, 20.0f);
-	displacement.z = mod(displacement.z, 5.0f);
+	displacement.z = mod(displacement.z, 10.0f);
 	vec3 p = R * vertex_position * size + displacement;
 	
 	vec4 position = model * vec4(p, 1.0f);
