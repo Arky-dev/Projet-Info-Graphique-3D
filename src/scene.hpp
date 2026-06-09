@@ -9,6 +9,8 @@
 
 #include "terrain.hpp"
 
+#include "sky/sky.hpp"
+
 using cgp::mesh_drawable;
 
 
@@ -54,7 +56,10 @@ struct scene_structure : cgp::scene_inputs_generic {
 	// ****************************** //
 
 	// Controller of the camera (extrinsic parameters: position/orientation) -- to be adapted to the desired model and behavior
-	camera_controller_orbit_euler camera_control; 
+	//camera_controller_orbit_euler camera_control; 
+
+	// Special camera mode adapted to a 2D displacement mode
+	camera_controller_2d_displacement camera_control;
 
 	// The model of camera projection (intrinsic parameters)
 	camera_projection_perspective camera_projection;
@@ -66,10 +71,14 @@ struct scene_structure : cgp::scene_inputs_generic {
 	// ****************************** //
 
 	mesh_drawable global_frame;          // The standard global frame
+	//skybox_drawable skybox; // Skybox used to represent the background
+	cgp::mesh_drawable sky; // Quad used to represent the sky (with a gradient color)
 	particle_system_structure particle_system;     // The container of the active particles
 	cgp::mesh_drawable snowflake;     // Mesh used to represent the snowflakes
 	cgp::mesh_drawable billboard;   // Quadrangle used to display the billboards
 	cgp::mesh_drawable sphere_light; // The moon
+
+	sky_color sky_colors; // The color of the sky (zenith and horizon) depending on the time of the day
 
 	void display_snowflake();
 

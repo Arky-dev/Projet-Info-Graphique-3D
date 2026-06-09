@@ -21,7 +21,7 @@ void scene_structure::initialize()
 	camera_control.set_rotation_axis_z(); // camera rotates around z-axis
 	//   look_at(camera_position, targeted_point, up_direction)
 	camera_control.look_at(
-		{ 3.0f, -2.0f, 5.5f } /* position of the camera in the 3D scene */,
+		{ 3.0f, -2.0f, 4.5f } /* position of the camera in the 3D scene */,
 		{0,0,3} /* targeted point in 3D scene */,
 		{0,0,1} /* direction of the "up" vector */);
 
@@ -42,7 +42,32 @@ void scene_structure::initialize()
 	// Initialize the shapes of the scene
 	// ***************************************** //
 
+	// Sky
+	sky.initialize_data_on_gpu(mesh_primitive_sphere(50.0f));
+	sky.shader.load(project::path + "shaders/sky/sky.vert.glsl", project::path + "shaders/sky/sky.frag.glsl"); // Special shader for the sky
+
+	// Skybox
+	/*
+	image_structure image_skybox_template = image_load_file(project::path + "assets/skybox/skybox_snowy_2.jpg");
+	// Other possibilities:
+	// //   image_structure image_skybox_template = image_load_file(project::path+"assets/skybox_01.jpg");
+	//   image_structure image_skybox_template = image_load_file(project::path+"assets/skybox_02.jpg");
+	//   image_structure image_skybox_template = image_load_file(project::path+"assets/skybox_debug.png");
+
+
+	//// Split the image into a grid of 4 x 3 sub-images
+	std::vector<image_structure> image_grid = image_split_grid(image_skybox_template, 4, 3);
+
+
+	skybox.initialize_data_on_gpu();
+	skybox.texture.initialize_cubemap_on_gpu(image_grid[1], image_grid[7], image_grid[5], image_grid[3], image_grid[10], image_grid[4]);
+	// Look at skybox_debug.png to see the correspondance of the image index
+	skybox.skybox_rotation = rotation_transform::from_vector_transform({ 0,0,1 }, {0,1,0}).matrix();
+	*/
+
 	gui.display_frame = true;
+
+	// Terrain
 
 	int N = 180;
 
@@ -157,7 +182,7 @@ void scene_structure::initialize()
 	cloud_positions.push_back({ 4.0f, -1.0f, 7.5f });
 
 	// Number of snowflakes displayed using Instancing (value can be higher)
-	N_instances = 10000;
+	N_instances = 50000;
 	// Add a per-instance vertex attribute for the position
 	for (int i = 0; i < N_instances; ++i)
 	{
@@ -286,14 +311,31 @@ void scene_structure::display_frame()
     camera_projection.aspect_ratio = window.aspect_ratio();
 	environment.camera_projection = camera_projection.matrix();
 	environment.camera_view = camera_control.camera_model.matrix_view();
-
 	environment.light = { 3,3,10 };
+
+	// Skybox
+	/*
+	//  Must be called before drawing the other shapes and without writing in the Depth Buffer
+	glDepthMask(GL_FALSE); // disable depth-buffer writing
+	draw(skybox, environment);
+	glDepthMask(GL_TRUE);  // re-activate depth-buffer write
+	*/
+
+	// Sky
+	sky_colors.update_color(timer.t);
+	glDepthMask(GL_FALSE); // disable depth-buffer writing
+	environment.uniform_generic.uniform_vec3["zenith_color"] = sky_colors.zenith_color;
+	environment.uniform_generic.uniform_vec3["horizon_color"] = sky_colors.horizon_color;
+	draw(sky, environment);
+	glDepthMask(GL_TRUE);  // re-activate depth-buffer write
+
+	// Light source
 	sphere_light.model.translation = environment.light;
 	sphere_light.material.color = gui.light_color * 0.8f;
 	sphere_light.material.phong.ambient = 1;
 	sphere_light.material.phong.diffuse = 0;
 	sphere_light.material.phong.specular = 0;
-	draw(sphere_light, environment);
+	 draw(sphere_light, environment);
 
 	// Draw the 3D reference frame axes if enabled
 	if (gui.display_frame)

@@ -4,6 +4,7 @@
 
 struct particle_snowflake
 {
+	static constexpr float max_height = 10.0f;
 	cgp::vec3 p0;  // Initial position
 	float size;
 
