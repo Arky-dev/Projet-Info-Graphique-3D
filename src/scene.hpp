@@ -81,7 +81,6 @@ struct scene_structure : cgp::scene_inputs_generic {
 	sky_color sky_colors; // The color of the sky (zenith and horizon) depending on the time of the day
 
 	void display_snowflake();
-	void display_billboard();
 
 	timer_basic timer;
 
@@ -96,6 +95,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	mesh_drawable cloud;
 	int N_instances;
 	GLuint snow_texture_id;
+	GLuint grass_texture_id;
 	cgp::mesh_drawable tree_drawable;
 	cgp::vec2 tree_pivot = { 0.0f, 9.0f };
 
@@ -121,6 +121,24 @@ struct scene_structure : cgp::scene_inputs_generic {
 	float tree_shake_timer = 0.0f;      // Tracks how long the tree has been shaking
 	float const SNOW_MAX_TIME = 15.0f;  // Shakes after 15 seconds of snow
 	float const SHAKE_DURATION = 2.0f;  // Shakes for 2 seconds
+
+	// --- DAY / NIGHT STATE ---
+	bool is_day = false;
+	float day_transition = 0.0f; // 0.0 = Night, 1.0 = Day
+
+	// --- CLOUDS ---
+	cgp::mesh_drawable cloud_drawable;
+	std::vector<cgp::vec3> cloud_positions;
+
+	// --- FLORA INSTANCING ---
+	cgp::mesh_drawable grass_drawable;
+	cgp::mesh_drawable leaf_drawable;
+
+	std::vector<cgp::vec3> grass_positions;
+	std::vector<cgp::vec3> leaf_positions;
+
+	GLuint grass_vbo = 0;
+	GLuint leaf_vbo = 0;
 
 	// ****************************** //
 	// Callback functions
