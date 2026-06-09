@@ -6,7 +6,7 @@ layout (location = 4) in vec3 instance_pos;
 
 uniform mat4 view;
 uniform mat4 projection;
-uniform float day_transition;
+uniform float season_transition;
 uniform float time;
 
 out vec2 fragment_uv;
@@ -44,7 +44,7 @@ void main() {
     // /!\ L'aide de l'IA s'arrête ici.
 
 
-    float scale_factor = smoothstep(0.2, 0.8, day_transition);
+    float scale_factor = smoothstep(0.2, 0.8, season_transition);
     vec3 scaled_pos = rotated_pos * scale_factor;
 
 

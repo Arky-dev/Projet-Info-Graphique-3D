@@ -76,9 +76,10 @@ struct scene_structure : cgp::scene_inputs_generic {
 	particle_system_structure particle_system;     // The container of the active particles
 	cgp::mesh_drawable snowflake;     // Mesh used to represent the snowflakes
 	cgp::mesh_drawable billboard;   // Quadrangle used to display the billboards
-	cgp::mesh_drawable sphere_light; // The moon
+	cgp::mesh_drawable sphere_light; // The moon and sun
 
 	sky_color sky_colors; // The color of the sky (zenith and horizon) depending on the time of the day
+	light_source light_att; // The position and color of the light source depending on the time of the day
 
 	void display_snowflake();
 
@@ -121,6 +122,10 @@ struct scene_structure : cgp::scene_inputs_generic {
 	float tree_shake_timer = 0.0f;      // Tracks how long the tree has been shaking
 	float const SNOW_MAX_TIME = 15.0f;  // Shakes after 15 seconds of snow
 	float const SHAKE_DURATION = 2.0f;  // Shakes for 2 seconds
+
+	// --- SUMMER / WINTER STATE ---
+	bool is_summer = false;
+	float season_transition = 0.0f; // 0.0 = Winter, 1.0 = Summer
 
 	// --- DAY / NIGHT STATE ---
 	bool is_day = false;

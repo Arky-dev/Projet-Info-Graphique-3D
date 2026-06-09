@@ -4,11 +4,21 @@
 
 struct light_source // Attributes of a light source
 {
+	static const cgp::vec3 night_light;
+	static const cgp::vec3 sunrise_light;
+	static const cgp::vec3 day_light ;
+
+	static const cgp::vec3 night_pos;
+	static const cgp::vec3 sunrise_pos;
+	static const cgp::vec3 day_pos;
+
 	cgp::vec3 position;
 	cgp::vec3 color;
-	float phong_ambient;
-	float phong_diffuse;
-	float phong_specular;
+	
+	light_source();
+
+	void update_light(float t);
+
 };
 
 struct sky_color

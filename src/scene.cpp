@@ -46,25 +46,6 @@ void scene_structure::initialize()
 	sky.initialize_data_on_gpu(mesh_primitive_sphere(50.0f));
 	sky.shader.load(project::path + "shaders/sky/sky.vert.glsl", project::path + "shaders/sky/sky.frag.glsl"); // Special shader for the sky
 
-	// Skybox
-	/*
-	image_structure image_skybox_template = image_load_file(project::path + "assets/skybox/skybox_snowy_2.jpg");
-	// Other possibilities:
-	// //   image_structure image_skybox_template = image_load_file(project::path+"assets/skybox_01.jpg");
-	//   image_structure image_skybox_template = image_load_file(project::path+"assets/skybox_02.jpg");
-	//   image_structure image_skybox_template = image_load_file(project::path+"assets/skybox_debug.png");
-
-
-	//// Split the image into a grid of 4 x 3 sub-images
-	std::vector<image_structure> image_grid = image_split_grid(image_skybox_template, 4, 3);
-
-
-	skybox.initialize_data_on_gpu();
-	skybox.texture.initialize_cubemap_on_gpu(image_grid[1], image_grid[7], image_grid[5], image_grid[3], image_grid[10], image_grid[4]);
-	// Look at skybox_debug.png to see the correspondance of the image index
-	skybox.skybox_rotation = rotation_transform::from_vector_transform({ 0,0,1 }, {0,1,0}).matrix();
-	*/
-
 	gui.display_frame = true;
 
 	// Terrain
@@ -156,7 +137,7 @@ void scene_structure::initialize()
 	// Sphere used to display the position of a light
 	sphere_light.initialize_data_on_gpu(mesh_primitive_sphere(0.2f));
 
-	environment.light = { 3, 3, 10 };
+	environment.light = light_att.position;
 
 	// Remove warnings for unset uniforms
 	cgp_warning::max_warning = 1;
@@ -194,7 +175,7 @@ void scene_structure::initialize()
 		particle_system.snowflake_positions_and_sizes.push_back(vec4(p.p0, p.size));
 	}
 	// Wind
-	wind = { 0.0f, 0.0f, 0.0f };
+	wind = { 0.2f, 0.1f, 0.0f };
 	// Send initial positions and sizes as a new buffer of data to the shader
 	snowflake.initialize_supplementary_data_on_gpu(particle_system.snowflake_positions_and_sizes, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 
@@ -311,31 +292,37 @@ void scene_structure::display_frame()
     camera_projection.aspect_ratio = window.aspect_ratio();
 	environment.camera_projection = camera_projection.matrix();
 	environment.camera_view = camera_control.camera_model.matrix_view();
-	environment.light = { 3,3,10 };
 
-	// Skybox
-	/*
-	//  Must be called before drawing the other shapes and without writing in the Depth Buffer
-	glDepthMask(GL_FALSE); // disable depth-buffer writing
-	draw(skybox, environment);
-	glDepthMask(GL_TRUE);  // re-activate depth-buffer write
-	*/
+	static float last_time = 0.0f;
+	float dt = timer.t - last_time;
+	last_time = timer.t;
 
 	// Sky
-	sky_colors.update_color(timer.t);
-	glDepthMask(GL_FALSE); // disable depth-buffer writing
+	if (is_day) {
+		day_transition = std::min(1.0f, day_transition + dt * 0.25f);
+	}
+	else {
+		day_transition = std::max(0.0f, day_transition - dt * 0.25f);
+	}
+	sky_colors.update_color(day_transition);
 	environment.uniform_generic.uniform_vec3["zenith_color"] = sky_colors.zenith_color;
 	environment.uniform_generic.uniform_vec3["horizon_color"] = sky_colors.horizon_color;
-	draw(sky, environment);
-	glDepthMask(GL_TRUE);  // re-activate depth-buffer write
 
 	// Light source
-	sphere_light.model.translation = environment.light;
-	sphere_light.material.color = gui.light_color * 0.8f;
+	light_att.update_light(day_transition);
+	sphere_light.model.translation = light_att.position;
+	sphere_light.material.color = light_att.color;
 	sphere_light.material.phong.ambient = 1;
 	sphere_light.material.phong.diffuse = 0;
 	sphere_light.material.phong.specular = 0;
-	 draw(sphere_light, environment);
+	environment.light = light_att.position;
+
+	glDepthMask(GL_FALSE); // disable depth-buffer writing
+	draw(sky, environment);
+	draw(sphere_light, environment);
+	glDepthMask(GL_TRUE);  // re-activate depth-buffer write
+
+
 
 	// Draw the 3D reference frame axes if enabled
 	if (gui.display_frame)
@@ -361,9 +348,9 @@ void scene_structure::display_frame()
 	// Draw all the shapes
 	draw(terrain_drawable, environment);
 	// Draw the instances of snowflakes
-	if (day_transition < 1.0f) {
+	if (season_transition < 1.0f) {
 		glUseProgram(snowflake.shader.id);
-		environment.uniform_generic.uniform_float["day_transition"] = day_transition;
+		environment.uniform_generic.uniform_float["season_transition"] = season_transition;
 		draw(snowflake, environment, N_instances);
 	}
 
@@ -388,11 +375,6 @@ void scene_structure::display_frame()
 		draw_wireframe(terrain_drawable, environment);
 	}
 
-
-	static float last_time = 0.0f;
-	float dt = timer.t - last_time;
-	last_time = timer.t;
-
 	// State machine for snow and shaking
 	// State machine for snow and shaking
 	static float tree_snow_timer = 0.0f;
@@ -403,7 +385,7 @@ void scene_structure::display_frame()
 	// NEW: Track the falling leaves!
 	static float leaf_fall_timer = 0.0f;
 
-	if (is_day) {
+	if (is_summer) {
 		tree_snow_timer = std::max(0.0f, tree_snow_timer - (dt * 5.0f));
 		terrain_snow_timer = std::max(0.0f, terrain_snow_timer - (dt * 5.0f));
 		is_shaking = false;
@@ -416,7 +398,7 @@ void scene_structure::display_frame()
 		terrain_snow_timer += dt;
 
 		// As the sun sets, start the falling animation
-		if (day_transition > 0.0f) {
+		if (season_transition > 0.0f) {
 			leaf_fall_timer = std::min(leaf_fall_timer + dt, 10.0f); // Cap at 10s
 		}
 
@@ -509,32 +491,13 @@ void scene_structure::display_frame()
 
 	// 1. SMOOTH TRANSITION
 	// It takes ~3 seconds to fully transition between day and night
-	if (is_day) {
-		day_transition = std::min(1.0f, day_transition + dt * 0.3f);
+	if (is_summer) {
+		season_transition = std::min(1.0f, season_transition + dt * 0.3f);
 	}
 	else {
-		day_transition = std::max(0.0f, day_transition - dt * 0.3f);
+		season_transition = std::max(0.0f, season_transition - dt * 0.3f);
 	}
 
-	// 2. LIGHTING & SKY COLOR
-	cgp::vec3 night_sky = { 0.05f, 0.05f, 0.12f };
-	cgp::vec3 day_sky = { 0.5f, 0.7f, 0.9f };
-
-	// C++ manual interpolation: (1 - t) * A + t * B
-	cgp::vec3 current_sky = (1.0f - day_transition) * night_sky + day_transition * day_sky;
-	glClearColor(current_sky.x, current_sky.y, current_sky.z, 1.0f);
-
-	// Interpolate light color (Blue moon to Warm sun)
-	cgp::vec3 night_light = { 0.3f, 0.3f, 0.8f };
-	cgp::vec3 day_light = { 1.0f, 0.95f, 0.8f };
-	gui.light_color = (1.0f - day_transition) * night_light + day_transition * day_light;
-
-	// Move the light source (Moon is high right, Sun is high left)
-	cgp::vec3 night_pos = { 3.0f, 3.0f, 10.0f };
-	cgp::vec3 day_pos = { -5.0f, 5.0f, 10.0f };
-	environment.light = (1.0f - day_transition) * night_pos + day_transition * day_pos;
-
-	sphere_light.model.translation = environment.light;
 
 	// 3. MOVE CLOUDS (Wind)
 	for (auto& pos : cloud_positions) {
@@ -543,7 +506,7 @@ void scene_structure::display_frame()
 	}
 
 	// 4. SEND MASTER STATE TO ALL SHADERS
-	environment.uniform_generic.uniform_float["day_transition"] = day_transition;
+	environment.uniform_generic.uniform_float["season_transition"] = season_transition;
 	environment.uniform_generic.uniform_vec3["cloud_0"] = cloud_positions[0];
 	environment.uniform_generic.uniform_vec3["cloud_1"] = cloud_positions[1];
 
@@ -551,12 +514,12 @@ void scene_structure::display_frame()
 	// Only bother drawing if they are large enough to see!
 	// --- DRAW FLORA ---
 	// --- DRAW FLORA ---
-	if (day_transition > 0.45f) {
+	if (season_transition > 0.45f) {
 		// Draw Leaves ONLY! (The terrain shader handles the grass texture automatically)
 		glUseProgram(leaf_drawable.shader.id);
 
 		// Notice we removed the "R" matrix here, we don't want them to billboard anymore!
-		environment.uniform_generic.uniform_float["day_transition"] = day_transition;
+		environment.uniform_generic.uniform_float["season_transition"] = season_transition;
 		environment.uniform_generic.uniform_float["time"] = timer.t;
 
 		environment.uniform_generic.uniform_float["leaf_fall_timer"] = leaf_fall_timer;
@@ -574,7 +537,8 @@ void scene_structure::display_gui()
 	ImGui::SliderFloat("Wind x", &wind.x, -1.0f, 1.0f);
 	ImGui::SliderFloat("Wind y", &wind.y, -1.0f, 1.0f);
 
-	ImGui::Checkbox("Toggle Day / Night", &is_day);
+	ImGui::Checkbox("Toggle Winter / Summer", &is_summer);
+	ImGui::Checkbox("Toggle Night / Day", &is_day);
 }
 
 
