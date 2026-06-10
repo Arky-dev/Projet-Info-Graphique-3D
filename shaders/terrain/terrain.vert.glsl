@@ -17,15 +17,12 @@ uniform mat4 view;
 uniform mat4 projection;
 
 void main() {
-    // Standard rigid object transformation
     vec4 world_position = model * vec4(position, 1.0);
     
-    // Pass data to the fragment shader
     fragment.position = world_position.xyz;
     fragment.color = color;
     fragment.uv = uv;
     
-    // Correctly rotate the normals for lighting
     mat3 normal_matrix = mat3(transpose(inverse(model)));
     fragment.normal = normalize(normal_matrix * normal);
 

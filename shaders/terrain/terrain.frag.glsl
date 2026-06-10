@@ -1,6 +1,5 @@
 #version 330 core
 
-// CGP standard inputs from the vertex shader
 in struct fragment_data {
     vec3 position;
     vec3 normal;
@@ -10,12 +9,10 @@ in struct fragment_data {
 
 out vec4 FragColor;
 
-// Texture uniforms
-uniform sampler2D image_texture; // Your rock texture
-uniform sampler2D image_snow;    // Your snow texture
-uniform sampler2D image_grass;   // Your grass texture
+uniform sampler2D image_texture; // roche
+uniform sampler2D image_snow;    // neige
+uniform sampler2D image_grass;   // herbe
 
-// General uniforms
 uniform float time;
 uniform vec3 light;
 
@@ -46,7 +43,6 @@ uniform vec3 cloud_1;
 uniform float terrain_snow_timer;
 
 void main() {
-    // 1. Sample all three textures
     vec4 color_rock  = texture(image_texture, fragment.uv);
     vec4 color_snow  = texture(image_snow, fragment.uv);
     vec4 color_grass = texture(image_grass, fragment.uv * 4.0); // Tiled for crisp detail
