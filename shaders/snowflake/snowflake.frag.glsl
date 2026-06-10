@@ -9,8 +9,8 @@ in struct fragment_data
 } fragment;
 
 layout(location=0) out vec4 FragColor;
-
 uniform sampler2D image_texture;   
+
 uniform mat4 view;       
 uniform vec3 light; 
 

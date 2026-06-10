@@ -2,8 +2,8 @@
 #include <math.h>
 
 // Sky colors
-const cgp::vec3 sky_color::zenith_midnight = {0.0f, 0.0f, 0.2f};
-const cgp::vec3 sky_color::horizon_midnight = {0.1f, 0.1f, 0.1f};
+const cgp::vec3 sky_color::zenith_midnight = {0.1f, 0.1f, 0.2f};
+const cgp::vec3 sky_color::horizon_midnight = {0.2f, 0.2f, 0.4f};
 const cgp::vec3 sky_color::zenith_sunrise = { 0.2f, 0.2f, 0.5f };
 const cgp::vec3 sky_color::horizon_sunrise = {1.0f, 0.7f, 0.2f};
 const cgp::vec3 sky_color::zenith_noon = {0.5f, 0.5f, 0.8f};

@@ -54,3 +54,12 @@ void update_terrain(mesh& terrain, mesh_drawable& terrain_visual, perlin_noise_p
 	//terrain_visual.vbo_color.update(terrain.color);
 
 }
+
+float terrain_height(mesh& terrain, float x, float y)
+{
+	int const N = std::sqrt(terrain.position.size());
+	int ku = static_cast<int>((x + 10.0f) / 20.0f * (N - 1));
+	int kv = static_cast<int>((y + 10.0f) / 20.0f * (N - 1));
+	int idx = ku * N + kv;
+	return terrain.position[idx].z;
+}

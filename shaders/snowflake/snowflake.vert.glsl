@@ -27,7 +27,6 @@ uniform float time; // Time in seconds since the start of the program
 uniform mat3 R; // Rotation matrix such that snowflakes always face the camera
 uniform vec3 wind; // Wind vector (x,y,z) applied to the snowflakes
 
-
 void main()
 {
 

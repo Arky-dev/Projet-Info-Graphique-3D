@@ -148,6 +148,7 @@ void scene_structure::initialize()
 	mesh quad = mesh_primitive_quadrangle({ 0, 0,0 }, { l,0,0 }, { l,l,0 }, { 0,l,0 });
 	snowflake.initialize_data_on_gpu(quad);
 	snowflake.material.phong = { 1,1,1,64 };
+	// Load snowflake textures
 	snowflake.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snowflakes/1.png");
 	snowflake.shader.load(project::path + "shaders/snowflake/snowflake.vert.glsl", project::path + "shaders/snowflake/snowflake.frag.glsl"); // special shader for the snowflakes
 	snowflake.material.color = { 1.0f, 1.0f,1.0f };
@@ -278,18 +279,17 @@ void scene_structure::initialize()
 	std::cout << "End function scene_structure::initialize()" << std::endl;
 }
 
-void scene_structure::display_snowflake()
-{
-	draw(snowflake, environment, N_instances);
-}
-
 
 // This function is called permanently at every new frame
 // Note that you should avoid having costly computation and large allocation defined there. This function is mostly used to call the draw() functions on pre-existing data.
 void scene_structure::display_frame()
 {
 	// Set the light to the current position of the camera
-	//camera_control.camera_model.position.z = 
+	// Ensure the camera doesn't go outside the terrain boundaries
+	camera_control.camera_model.position_camera.x = std::max(std::min(camera_control.camera_model.position_camera.x, 8.0f), -8.0f);
+	camera_control.camera_model.position_camera.y = std::max(std::min(camera_control.camera_model.position_camera.y, 8.0f), -8.0f);
+	// Set the camera to be 2.0f units above the terrain
+	camera_control.camera_model.position_camera.z = terrain_height(terrain_mesh, camera_control.camera_model.position_camera.x, camera_control.camera_model.position_camera.y) + 2.0f;
     camera_projection.aspect_ratio = window.aspect_ratio();
 	environment.camera_projection = camera_projection.matrix();
 	environment.camera_view = camera_control.camera_model.matrix_view();
@@ -349,6 +349,8 @@ void scene_structure::display_frame()
 	// Draw all the shapes
 	draw(terrain_drawable, environment);
 	// Draw the instances of snowflakes
+	// Send snowflake textures
+
 	if (season_transition < 1.0f) {
 		glUseProgram(snowflake.shader.id);
 		environment.uniform_generic.uniform_float["season_transition"] = season_transition;

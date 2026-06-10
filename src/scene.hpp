@@ -75,13 +75,14 @@ struct scene_structure : cgp::scene_inputs_generic {
 	cgp::mesh_drawable sky; // Quad used to represent the sky (with a gradient color)
 	particle_system_structure particle_system;     // The container of the active particles
 	cgp::mesh_drawable snowflake;     // Mesh used to represent the snowflakes
+	GLuint snowflake_1_texture_id; // Different snowflake textures
+	GLuint snowflake_2_texture_id;
+	GLuint snowflake_3_texture_id;
 	cgp::mesh_drawable billboard;   // Quadrangle used to display the billboards
 	cgp::mesh_drawable sphere_light; // The moon and sun
 
 	sky_color sky_colors; // The color of the sky (zenith and horizon) depending on the time of the day
 	light_source light_att; // The position and color of the light source depending on the time of the day
-
-	void display_snowflake();
 
 	timer_basic timer;
 
