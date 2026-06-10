@@ -21,7 +21,7 @@ uniform float shake_time;
 // 1. ADD THE SNOW TIMER FROM C++
 uniform float snow_time; 
 
-uniform float day_transition;
+uniform float season_transition;
 
 void main() {    
     // 1. MEASUREMENTS
@@ -61,9 +61,9 @@ void main() {
     mat3 normal_matrix = mat3(transpose(inverse(model)));
     vec3 world_normal = normalize(normal_matrix * displaced_normal);
 
-    // --- 3. SNOW ACCUMULATION (Melts dynamically with day_transition!) ---
+    // --- 3. SNOW ACCUMULATION (Melts dynamically with season_transition!) ---
     // Force the timer down to 0 as day approaches
-    float active_snow_time = snow_time * (1.0 - day_transition);
+    float active_snow_time = snow_time * (1.0 - season_transition);
     float snow_factor = clamp(active_snow_time / 15.0, 0.0, 1.0); 
     
     float up_factor = max(0.0, world_normal.z);

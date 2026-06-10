@@ -16,12 +16,12 @@ uniform float snow_time;
 uniform vec3 light;
 
 // Only declare this ONCE!
-uniform float day_transition;     
+uniform float season_transition;     
 
 void main() {
     // 1. MELTING MATH
     // Force the timer down to 0 as day approaches
-    float active_snow_time = snow_time * (1.0 - day_transition);
+    float active_snow_time = snow_time * (1.0 - season_transition);
     float snow_factor = clamp(active_snow_time / 15.0, 0.0, 1.0);
 
     // 2. READ TEXTURES

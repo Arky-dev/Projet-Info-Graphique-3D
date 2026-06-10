@@ -37,7 +37,7 @@ float noise( in vec2 p ) {
 }
 // ---------------------------------------
 
-uniform float day_transition;
+uniform float season_transition;
 uniform vec3 cloud_0;
 uniform vec3 cloud_1;
 uniform float terrain_snow_timer;
@@ -60,7 +60,7 @@ void main() {
     float flat_mask = smoothstep(0.75, 0.85, slope);
     
     // As day transitions, smoothly fade the rock into grass
-    vec4 ground_color = mix(color_rock, color_grass, day_transition * flat_mask);
+    vec4 ground_color = mix(color_rock, color_grass, season_transition * flat_mask);
     // ----------------------------
 
     // Parameters
@@ -93,7 +93,7 @@ void main() {
         accumulation -= (sun_exposure * 0.1); 
         
         // MELTING MATH
-        accumulation *= (1.0 - day_transition);
+        accumulation *= (1.0 - season_transition);
         
         snow_presence = clamp(accumulation, 0.0, 1.0);
     }
@@ -113,7 +113,7 @@ void main() {
     float shadow_2 = smoothstep(3.0, 0.0, length(fragment.position.xy - cloud_1.xy));
     
     // Combine shadows and only apply them during the day
-    float total_shadow = clamp(shadow_1 + shadow_2, 0.0, 1.0) * day_transition;
+    float total_shadow = clamp(shadow_1 + shadow_2, 0.0, 1.0) * season_transition;
     
     // Apply the shadow darkening directly to final_color
     final_color.rgb *= (1.0 - total_shadow * 0.4);

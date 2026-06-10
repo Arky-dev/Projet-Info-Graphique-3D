@@ -39,7 +39,7 @@ struct material_structure
 uniform material_structure material;
 
 // --- NEW: Bring the state machine into the global snow! ---
-uniform float day_transition; 
+uniform float season_transition; 
 // ----------------------------------------------------------
 
 void main()
@@ -76,9 +76,9 @@ void main()
 	}
 
 	// --- THE DISSOLVE EFFECT ---
-	// As day_transition goes from 0 to 1, the cutoff rises.
+	// As season_transition goes from 0 to 1, the cutoff rises.
 	// We use 1.01 as the max to ensure the very center pixel of the snowflake is fully destroyed!
-	float cutoff = mix(0.5, 1.01, day_transition);
+	float cutoff = mix(0.5, 1.01, season_transition);
 	
 	if(color_image_texture.a < cutoff){
 		discard;
