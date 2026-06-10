@@ -42,13 +42,13 @@ void scene_structure::initialize()
 	// Initialize the shapes of the scene
 	// ***************************************** //
 
-	// Sky
+	// CIEL
 	sky.initialize_data_on_gpu(mesh_primitive_sphere(50.0f));
 	sky.shader.load(project::path + "shaders/sky/sky.vert.glsl", project::path + "shaders/sky/sky.frag.glsl"); // Special shader for the sky
 
 	gui.display_frame = true;
 
-	// Terrain
+	// TERRAIN
 
 	int N = 180;
 
@@ -61,33 +61,25 @@ void scene_structure::initialize()
 		}
 	}
 
-	// Initialize ONE terrain mesh
 	terrain_mesh = create_terrain_mesh();
 	terrain_drawable.initialize_data_on_gpu(terrain_mesh);
 
-	// Load Rock texture (handled automatically by terrain_drawable)
 	terrain_drawable.texture.load_and_initialize_texture_2d_on_gpu(
 		project::path + "assets/pierre.jpg", GL_REPEAT, GL_REPEAT);
-
-	// Load Grass texture for the terrain
 	grass_texture_id = opengl_load_texture_image(
 		project::path + "assets/grass.jpg", GL_REPEAT, GL_REPEAT);
-
-	// Load Snow texture directly into OpenGL (we will pass this manually)
 	snow_texture_id = opengl_load_texture_image(
 		project::path + "assets/snow.jpg", GL_REPEAT, GL_REPEAT);
 
-	// Apply the initial shape deformation
 	update_terrain(terrain_mesh, terrain_drawable, parameters, noisy_tab, 0.0);
 
-	// Load our new custom shader that handles the snow mathematically
-	// (Assuming you have a basic standard vertex shader, you just replace the fragment shader)
 	terrain_drawable.shader.load(
-		project::path + "shaders/terrain/terrain.vert.glsl", // Or standard CGP terrain vert
+		project::path + "shaders/terrain/terrain.vert.glsl",
 		project::path + "shaders/terrain/terrain.frag.glsl"
 	);
 
-	// 1. Create the basic shapes (Trunk and Branches)
+
+	// ARBRE
 	mesh tree_mesh = mesh_load_file_obj(project::path + "assets/tree/raw2.obj");
 
 	for (auto& p : tree_mesh.position) {
@@ -95,10 +87,8 @@ void scene_structure::initialize()
 	}
 	tree_mesh.normal_update();
 
-	// 3. Send to GPU and set textures/shaders
 	tree_drawable.initialize_data_on_gpu(tree_mesh);
 	
-	// Assuming you want the whole tree to use the bark texture for now
 	tree_drawable.texture.load_and_initialize_texture_2d_on_gpu(
 		project::path + "assets/bark.jpg", GL_REPEAT, GL_REPEAT);
 
@@ -107,13 +97,11 @@ void scene_structure::initialize()
 		project::path + "shaders/tree/tree.frag.glsl"
 	);
 
-	// 4. Position the tree in the middle of your scene
-	// You can change X and Y to move it around your terrain
-	tree_drawable.model.translation = { 9.f, 0.0f, 1.6f };
+	tree_drawable.model.translation = { 9.f, 0.0f, 1.6f }; // l'arbre était au mauvais endroit lors du chargement initial
 	tree_drawable.model.rotation = rotation_transform::from_axis_angle({ 0, 1, 0 }, -1.f* Pi / 2.0f);
 
 
-	// 1. INCREASE SIZE: Change from 0.05f to 0.15f for better visibility
+	// Explosion de neige lors de la secousse de l'abre
 	float sl = 0.05f;
 	cgp::mesh quad_burst = cgp::mesh_primitive_quadrangle({ -sl, -sl, 0 }, { sl, -sl, 0 }, { sl, sl, 0 }, { -sl, sl, 0 });
 
@@ -121,50 +109,34 @@ void scene_structure::initialize()
 	tree_snow_burst.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snowflakes/1.png");
 	tree_snow_burst.shader.load(project::path + "shaders/burst/burst.vert.glsl", project::path + "shaders/burst/burst.frag.glsl");
 
-	// 2. SETUP INSTANCING: Create a buffer for up to 1000 particles
 	glGenBuffers(1, &burst_instance_vbo);
 	glBindVertexArray(tree_snow_burst.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, burst_instance_vbo);
 	glBufferData(GL_ARRAY_BUFFER, 5000 * sizeof(cgp::vec4), nullptr, GL_DYNAMIC_DRAW);
 
-	// Bind it to Location 4 in the shader
 	glEnableVertexAttribArray(4);
 	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(cgp::vec4), (void*)0);
-	glVertexAttribDivisor(4, 1); // The magic line that tells OpenGL it is instanced!
+	glVertexAttribDivisor(4, 1);
 	glBindVertexArray(0);
 
 
-	// Sphere used to display the position of a light
+	// LUMIERE
 	sphere_light.initialize_data_on_gpu(mesh_primitive_sphere(0.2f));
 
 	environment.light = light_att.position;
 
-	// Remove warnings for unset uniforms
 	cgp_warning::max_warning = 1;
 
-	// Snowflakes
-	// Create a quad to display snowflakes as impostors
+	// FLOCONS DE NEIGE
 	float l = 0.05f;
 	mesh quad = mesh_primitive_quadrangle({ 0, 0,0 }, { l,0,0 }, { l,l,0 }, { 0,l,0 });
 	snowflake.initialize_data_on_gpu(quad);
 	snowflake.material.phong = { 1,1,1,64 };
 	snowflake.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/snowflakes/1.png");
-	snowflake.shader.load(project::path + "shaders/snowflake/snowflake.vert.glsl", project::path + "shaders/snowflake/snowflake.frag.glsl"); // special shader for the snowflakes
+	snowflake.shader.load(project::path + "shaders/snowflake/snowflake.vert.glsl", project::path + "shaders/snowflake/snowflake.frag.glsl");
 	snowflake.material.color = { 1.0f, 1.0f,1.0f };
 
-	// Initialize Clouds
-	cgp::mesh cloud_mesh = cgp::mesh_primitive_quadrangle(
-		{ -1.5f,-1.5f,0 }, { 1.5f,-1.5f,0 }, { 1.5f,1.5f,0 }, { -1.5f,1.5f,0 }
-	);
-	cloud_drawable.initialize_data_on_gpu(cloud_mesh);
-
-	// Create two clouds high up in the sky
-	cloud_positions.push_back({ -3.0f, 2.0f, 8.0f });
-	cloud_positions.push_back({ 4.0f, -1.0f, 7.5f });
-
-	// Number of snowflakes displayed using Instancing (value can be higher)
 	N_instances = 50000;
-	// Add a per-instance vertex attribute for the position
 	for (int i = 0; i < N_instances; ++i)
 	{
 		particle_snowflake p = particle_snowflake(10.0f);
@@ -179,8 +151,8 @@ void scene_structure::initialize()
 	// Send initial positions and sizes as a new buffer of data to the shader
 	snowflake.initialize_supplementary_data_on_gpu(particle_system.snowflake_positions_and_sizes, /*location*/ 4, /*divisor: 1=per instance, 0=per vertex*/ 1);
 
-	// 1. GENERATE GRASS POSITIONS (Flat, Center of Scene)
-	// We iterate through your actual terrain mesh to find the perfect spots!
+	
+	// HERBE
 	for (size_t i = 0; i < terrain_mesh.position.size(); ++i) {
 		cgp::vec3 p = terrain_mesh.position[i];
 		cgp::vec3 n = terrain_mesh.normal[i];
@@ -196,39 +168,28 @@ void scene_structure::initialize()
 		}
 	}
 
-	// 2. GENERATE LEAF POSITIONS (Tree Canopy)
-	// --- FIX: CANOPY-ALIGNED LEAF PLACEMENT ---
-	// --- FIX: ROTATED CANOPY LEAF PLACEMENT ---
-	// --- FIX: ROTATED CANOPY LEAF PLACEMENT ---
-	// --- FIX: VOLUMETRIC CANOPY PLACEMENT ---
-	// --- FIX: EXACT LEAF PLACEMENT ---
+	
+	// FEUILLES DE L'ARBRE
 	leaf_positions.clear();
 
-	// Create the exact same rotation matrix you used for the tree (-Pi/2 on Y)
 	cgp::mat3 R_tree = cgp::rotation_transform::from_axis_angle({ 0, 1, 0 }, -1.0f * cgp::Pi / 2.0f).matrix();
 
 	for (size_t i = 0; i < tree_mesh.position.size(); i += 15) {
 
-		// 1. Grab the point (These points are ALREADY scaled by 1.5 natively!)
 		cgp::vec3 p = tree_mesh.position[i];
 
-		// 2. Measure local dimensions to filter out the trunk
 		float local_height = p.x;
 		float local_radius = std::sqrt(p.y * p.y + p.z * p.z);
 
-		// 3. FILTER: Only place a leaf on the outer canopy
-		// Radius > 0.8 ensures we don't put leaves inside the wooden trunk
-		// Height > 2.0 ensures we don't put leaves near the roots
 		if (local_radius > 0.8f && local_height > 0.0f) {
+			
+			//on met les feuilles à la position de l'arbre
+			cgp::vec3 world_leaf_pos = R_tree * p;
 
-			// 4. Apply the exact Rotation and Translation of the tree
-			cgp::vec3 world_leaf_pos = R_tree * p;    // Rotate first
-
-			world_leaf_pos.x += 9.0f;                 // Translate second
+			world_leaf_pos.x += 9.0f; 
 			world_leaf_pos.y += 0.0f;
 			world_leaf_pos.z += 1.6f;
 
-			// Add a tiny random offset so the leaves aren't glued perfectly flat to the bark
 			world_leaf_pos.x += rand_interval(-0.2f, 0.2f);
 			world_leaf_pos.y += rand_interval(-0.2f, 0.2f);
 			world_leaf_pos.z += rand_interval(-0.2f, 0.2f);
@@ -242,29 +203,13 @@ void scene_structure::initialize()
 	float h = 0.3f;
 	cgp::mesh quad_flora = cgp::mesh_primitive_quadrangle({ -w, 0, 0 }, { w, 0, 0 }, { w, 0, h }, { -w, 0, h });
 
-	// Initialize Grass
 	grass_drawable.initialize_data_on_gpu(quad_flora);
-	// ** IMPORTANT: Provide your own grass/leaf textures here! **
-	// If you don't have images yet, you can comment the texture lines out and the shader will draw them white/grey.
 	grass_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/grass.jpg");
-	grass_drawable.shader.load(project::path + "shaders/leaves/leaves.vert.glsl", project::path + "shaders/leaves/leaves.frag.glsl");
 
-	// Initialize Leaves (Reuse the exact same quad and shader!)
 	leaf_drawable.initialize_data_on_gpu(quad_flora);
 	leaf_drawable.texture.load_and_initialize_texture_2d_on_gpu(project::path + "assets/leaf.png");
 	leaf_drawable.shader.load(project::path + "shaders/leaves/leaves.vert.glsl", project::path + "shaders/leaves/leaves.frag.glsl");
 
-	// 4. BIND VBOs (Send the positions to the GPU permanently)
-	// Grass Buffer
-	glGenBuffers(1, &grass_vbo);
-	glBindVertexArray(grass_drawable.vao);
-	glBindBuffer(GL_ARRAY_BUFFER, grass_vbo);
-	glBufferData(GL_ARRAY_BUFFER, grass_positions.size() * sizeof(cgp::vec3), grass_positions.data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(cgp::vec3), (void*)0);
-	glVertexAttribDivisor(4, 1);
-
-	// Leaf Buffer
 	glGenBuffers(1, &leaf_vbo);
 	glBindVertexArray(leaf_drawable.vao);
 	glBindBuffer(GL_ARRAY_BUFFER, leaf_vbo);
@@ -297,7 +242,7 @@ void scene_structure::display_frame()
 	float dt = timer.t - last_time;
 	last_time = timer.t;
 
-	// Sky
+	// SKY 
 	if (is_day) {
 		day_transition = std::min(1.0f, day_transition + dt * 0.25f);
 	}
@@ -348,7 +293,7 @@ void scene_structure::display_frame()
 	// Draw all the shapes
 	draw(terrain_drawable, environment);
 	// Draw the instances of snowflakes
-	if (season_transition < 1.0f) {
+	if (season_transition < 0.5f) {
 		glUseProgram(snowflake.shader.id);
 		environment.uniform_generic.uniform_float["season_transition"] = season_transition;
 		draw(snowflake, environment, N_instances);
@@ -358,31 +303,22 @@ void scene_structure::display_frame()
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, snow_texture_id);
 
-	// ADD THIS FOR THE GRASS
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, grass_texture_id);
 	environment.uniform_generic.uniform_int["image_grass"] = 2;
-
-	// Draw the terrain...
-
-	// 2. Tell the shader that "image_snow" corresponds to Texture Unit 1
 	environment.uniform_generic.uniform_int["image_snow"] = 1;
 
-	// 3. Draw the terrain (the shader calculates the snow on the fly!)
 	draw(terrain_drawable, environment);
 
 	if (gui.display_wireframe) {
 		draw_wireframe(terrain_drawable, environment);
 	}
 
-	// State machine for snow and shaking
-	// State machine for snow and shaking
 	static float tree_snow_timer = 0.0f;
-	static float terrain_snow_timer = 0.0f; // NEW: Dedicated timer for ground snow
+	static float terrain_snow_timer = 0.0f;
 	static float shake_timer = 0.0f;
 	static bool is_shaking = false;
 
-	// NEW: Track the falling leaves!
 	static float leaf_fall_timer = 0.0f;
 
 	if (is_summer) {
@@ -498,22 +434,6 @@ void scene_structure::display_frame()
 		season_transition = std::max(0.0f, season_transition - dt * 0.3f);
 	}
 
-
-	// 3. MOVE CLOUDS (Wind)
-	for (auto& pos : cloud_positions) {
-		pos.x += dt * 0.5f;
-		if (pos.x > 15.0f) pos.x = -15.0f; // Wrap around the sky
-	}
-
-	// 4. SEND MASTER STATE TO ALL SHADERS
-	environment.uniform_generic.uniform_float["season_transition"] = season_transition;
-	environment.uniform_generic.uniform_vec3["cloud_0"] = cloud_positions[0];
-	environment.uniform_generic.uniform_vec3["cloud_1"] = cloud_positions[1];
-
-	// --- DRAW FLORA ---
-	// Only bother drawing if they are large enough to see!
-	// --- DRAW FLORA ---
-	// --- DRAW FLORA ---
 	if (season_transition > 0.45f) {
 		// Draw Leaves ONLY! (The terrain shader handles the grass texture automatically)
 		glUseProgram(leaf_drawable.shader.id);
