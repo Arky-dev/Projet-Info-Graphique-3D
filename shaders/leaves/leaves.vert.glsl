@@ -45,7 +45,17 @@ void main() {
 
 
     float scale_factor = smoothstep(0.2, 0.8, season_transition);
-    vec3 scaled_pos = rotated_pos * scale_factor;
+    
+    float dist_from_trunk = length(instance_pos.xy - vec2(9.0, 0.0));
+
+    float rand_size = fract(sin(dot(instance_pos.xyz, vec3(31.415, 92.653, 58.979))) * 43758.5453);
+    float size_variance = 0.6 + (rand_size * 0.6);
+
+    float distance_scale = mix(1.2, 0.4, smoothstep(0.5, 4.0, dist_from_trunk));
+
+    float final_scale = scale_factor * size_variance * distance_scale;
+
+    vec3 scaled_pos = rotated_pos * final_scale;
 
 
     float t = time * 2.5;
@@ -55,8 +65,8 @@ void main() {
     
     float bend_factor = position.z; 
     float wind_strength = 0.07;
-    scaled_pos.x += waveX * wind_strength * bend_factor * scale_factor;
-    scaled_pos.y += waveY * wind_strength * bend_factor * scale_factor;
+    scaled_pos.x += waveX * wind_strength * bend_factor * final_scale;
+    scaled_pos.y += waveY * wind_strength * bend_factor * final_scale;
 
 
     vec3 drop_offset = vec3(0.0);

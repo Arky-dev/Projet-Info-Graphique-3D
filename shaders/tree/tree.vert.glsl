@@ -18,20 +18,19 @@ uniform mat4 projection;
 
 uniform vec2 tree_pivot; 
 uniform float shake_time; 
-// 1. ADD THE SNOW TIMER FROM C++
+
 uniform float snow_time; 
 
 uniform float season_transition;
 
 void main() {    
-    // 1. MEASUREMENTS
     vec2 centered_yz = position.yz - tree_pivot;
     float r_dist = length(centered_yz); 
     
     float root_x = -1.0; 
     float h_dist = max(0.0, position.x - root_x); 
     
-    // 2. TREE SHAKE MATH
+    // secousse
     float envelope = 1.0 - smoothstep(0.8, 2.5, shake_time);
     if (shake_time <= 0.0) envelope = 0.0;
     
@@ -61,17 +60,15 @@ void main() {
     mat3 normal_matrix = mat3(transpose(inverse(model)));
     vec3 world_normal = normalize(normal_matrix * displaced_normal);
 
-    // --- 3. SNOW ACCUMULATION (Melts dynamically with season_transition!) ---
-    // Force the timer down to 0 as day approaches
+    // accumulation de la neige
     float active_snow_time = snow_time * (1.0 - season_transition);
     float snow_factor = clamp(active_snow_time / 15.0, 0.0, 1.0); 
     
     float up_factor = max(0.0, world_normal.z);
     float max_snow_thickness = 0.15; 
     world_position.xyz += world_normal * up_factor * snow_factor * max_snow_thickness;
-    // ---------------------------------------------------------------------
 
-    // Output
+
     fragment.position = world_position.xyz;
     fragment.color = color;
     fragment.uv = uv;

@@ -48,7 +48,6 @@ void update_terrain(mesh& terrain, mesh_drawable& terrain_visual, perlin_noise_p
 
 	terrain.normal_update();
 
-	// Update step: Allows to update a mesh_drawable without creating a new one
 	terrain_visual.vbo_position.update(terrain.position);
 	terrain_visual.vbo_normal.update(terrain.normal);
 	//terrain_visual.vbo_color.update(terrain.color);

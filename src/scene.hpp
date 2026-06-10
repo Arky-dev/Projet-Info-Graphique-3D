@@ -101,7 +101,7 @@ struct scene_structure : cgp::scene_inputs_generic {
 	cgp::mesh_drawable tree_drawable;
 	cgp::vec2 tree_pivot = { 0.0f, 9.0f };
 
-	// 1. The physics structure for the falling snow
+	
 	struct burst_particle {
 		cgp::vec3 position;
 		cgp::vec3 velocity;
@@ -111,32 +111,23 @@ struct scene_structure : cgp::scene_inputs_generic {
 	std::vector<burst_particle> tree_particles;
 	cgp::mesh_drawable tree_snow_burst;
 
-	// ADD THIS: The buffer that will hold our instancing data
 	GLuint burst_instance_vbo = 0;
 
 	float tree_snow_timer = 0.0f;
 
-	// 2. State Machine Variables
 	enum TreeState { IDLE, SHAKING };
 	TreeState current_tree_state = IDLE;
 
-	float tree_shake_timer = 0.0f;      // Tracks how long the tree has been shaking
-	float const SNOW_MAX_TIME = 15.0f;  // Shakes after 15 seconds of snow
-	float const SHAKE_DURATION = 2.0f;  // Shakes for 2 seconds
+	float tree_shake_timer = 0.0f;
+	float const SNOW_MAX_TIME = 15.0f;
+	float const SHAKE_DURATION = 2.0f;
 
-	// --- SUMMER / WINTER STATE ---
 	bool is_summer = false;
-	float season_transition = 0.0f; // 0.0 = Winter, 1.0 = Summer
+	float season_transition = 0.0f;
 
-	// --- DAY / NIGHT STATE ---
 	bool is_day = false;
-	float day_transition = 0.0f; // 0.0 = Night, 1.0 = Day
+	float day_transition = 0.0f; 
 
-	// --- CLOUDS ---
-	cgp::mesh_drawable cloud_drawable;
-	std::vector<cgp::vec3> cloud_positions;
-
-	// --- FLORA INSTANCING ---
 	cgp::mesh_drawable grass_drawable;
 	cgp::mesh_drawable leaf_drawable;
 

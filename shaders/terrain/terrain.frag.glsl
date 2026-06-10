@@ -16,6 +16,7 @@ uniform sampler2D image_grass;   // herbe
 uniform float time;
 uniform vec3 light;
 
+// Code généré à l'aide d'une IA
 // --- Compact 2D GLSL Noise Functions ---
 vec2 hash( vec2 p ) {
 	p = vec2( dot(p,vec2(127.1,311.7)), dot(p,vec2(269.5,183.3)) );
@@ -36,6 +37,7 @@ float noise( in vec2 p ) {
     return dot( n, vec3(70.0) );
 }
 // ---------------------------------------
+// Fin du code généré à l'aide d'une IA
 
 uniform float season_transition;
 uniform vec3 cloud_0;
@@ -45,9 +47,8 @@ uniform float terrain_snow_timer;
 void main() {
     vec4 color_rock  = texture(image_texture, fragment.uv);
     vec4 color_snow  = texture(image_snow, fragment.uv);
-    vec4 color_grass = texture(image_grass, fragment.uv * 4.0); // Tiled for crisp detail
+    vec4 color_grass = texture(image_grass, fragment.uv * 4.0);
     
-    // Boost the snow brightness slightly so it pops
     color_snow.rgb = min(color_snow.rgb * 1.2, 1.0); 
     
     // Normal and Light calculations
