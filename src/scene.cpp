@@ -289,6 +289,7 @@ void scene_structure::display_snowflake()
 void scene_structure::display_frame()
 {
 	// Set the light to the current position of the camera
+	//camera_control.camera_model.position.z = 
     camera_projection.aspect_ratio = window.aspect_ratio();
 	environment.camera_projection = camera_projection.matrix();
 	environment.camera_view = camera_control.camera_model.matrix_view();
